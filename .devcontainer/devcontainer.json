@@ -1,0 +1,37 @@
+{
+  // Configuración del Codespace para el backend Flask + MySQL.
+  "name": "Backend Flask + MySQL",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+  // Features: Docker (para correr MySQL) y Python 3.12.
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" }
+  },
+
+  // Se ejecuta UNA vez al crear el Codespace. Automatiza:
+  //   1. Limpia un contenedor previo con el mismo nombre (idempotente).
+  //   2. Levanta MySQL en Docker.
+  //   3. Espera a que MySQL acepte conexiones (en vez de un sleep fijo).
+  //   4. Carga el esquema y los datos desde directorio.sql.
+  //   5. Instala las dependencias de Python.
+  "postCreateCommand": "docker rm -f mysql-directorio 2>/dev/null; docker run --name mysql-directorio -e MYSQL_ROOT_PASSWORD=contrasena -e MYSQL_DATABASE=directorio -p 3306:3306 -d mysql:latest && echo 'Esperando a que MySQL este listo...' && until docker exec mysql-directorio mysql -u root -pcontrasena -e 'SELECT 1' directorio >/dev/null 2>&1; do sleep 2; done && docker exec -i mysql-directorio mysql -u root -pcontrasena directorio < directorio.sql && pip install mysql-connector-python flask flask-cors && echo 'Backend listo: ejecuta  python ws_directorio.py'",
+
+  // Reenvía el puerto del servidor Flask.
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": { "label": "Backend Flask" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylint",
+        "humao.rest-client"
+      ]
+    }
+  },
+
+  "remoteUser": "vscode"
+}
